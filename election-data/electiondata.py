@@ -154,5 +154,5 @@ class ElectionData:
 		total = pd.concat(frames).drop_duplicates(subset=["name"])
 		colOrder = ["name", "office", "state", "candidateId", "ratings", "positions", "votes"]
 		data = total[colOrder].to_dict(orient="records")
-		with open(os.path.join(self.out_dir, "candidates.json"), "w") as f:
+		with open(os.path.join(self.out_dir, "candidates-500.json"), "w") as f:
 			f.write(json.dumps(data, indent=2))

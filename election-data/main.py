@@ -7,15 +7,17 @@ parser.add_argument('-s', '--state', type=str, required=False, default="NA",
                     help='state of candidates, or "NA" for national candidates')
 parser.add_argument('-o', '--out', type=str, required=False, default="test-data",
                     help='output directory')
+parser.add_argument('-a', '--analysis', type=bool, required=False, default=False,
+										help='enable analysis of candidate data')
 
-def main(state, out_dir):
+def main(state, out_dir, analysis):
 	data = ElectionData(state, out_dir)
-	data.create_candidate_db(10)
+	data.create_candidate_db(500)
 
 if __name__ == "__main__":
 	args = parser.parse_args()
 
 	print(os.path.join(args.out, "candidates.json"))
 
-	print("Creating  database")
-	main(args.state, args.out)
+	print("Creating database")
+	main(args.state, args.out, args.analysis)
