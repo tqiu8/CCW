@@ -12,12 +12,10 @@ parser.add_argument('-a', '--analysis', type=bool, required=False, default=False
 
 def main(state, out_dir, analysis):
 	data = ElectionData(state, out_dir)
-	data.create_candidate_db(500)
+	data.format_candidates()
 
 if __name__ == "__main__":
 	args = parser.parse_args()
-
-	print(os.path.join(args.out, "candidates.json"))
 
 	print("Creating database")
 	main(args.state, args.out, args.analysis)

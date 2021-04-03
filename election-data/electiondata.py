@@ -35,7 +35,7 @@ class ElectionData:
 
 
 	def get_votes(self, row):
-		allVotes = {}
+		allVotes = []
 		for i, bill in enumerate(self.important_bill_ids):
 			actions = sum(self.billdf.loc[self.billdf['bill_id'] == bill]['Actions'], [])
 			title = self.billdf.loc[self.billdf['bill_id'] == bill].iloc[0]['Title']
@@ -43,18 +43,19 @@ class ElectionData:
 			for a in actions:
 				try:
 					action = votesmart.votes.getBillActionVoteByOfficial(a, row['candidateId']).action
-					allVotes[title].append(action)
+					allVotes.append({"vote_name": title, "vote_val": action})
 				except:
 					pass
 		return allVotes
 
 	def get_ratings(self, row):
-		ratings = {}
+		ratings = []
 		for i, sig in enumerate(self.env):
 			try:
 				#most recent rating
 				rating = votesmart.rating.getCandidateRating(row["candidateId"], sig.sigId)[-1]
-				ratings[rating.ratingName] = {"rating_text": rating.ratingText, "rating_val":rating.rating}
+				ratings.append({"rating_name": rating.ratingName, "rating_text": rating.ratingText, "rating_val": rating.rating})
+				# ratings[rating.ratingName] = {"rating_text": rating.ratingText, "rating_val":rating.rating}
 			except:
 				pass
 		return ratings
@@ -122,7 +123,6 @@ class ElectionData:
 
 	def get_election_data(self, zipcode):
 		json_data = OrderedDict({"zip": zipcode, "elections": []})
-		#  elections = requests.get("https://www.googleapis.com/civicinfo/v2/elections", params).json()["elections"]
 		elections = votesmart.election.getElectionByZip(zipcode)
 		for election in elections:
 			if election.officeTypeId == "C":
@@ -146,13 +146,25 @@ class ElectionData:
 			state = self.states[i]
 			try:
 				candidates = self.get_candidates(self.getByOfficeState, {"stateId":state}, True)
+				print(candidates.head())
 				frames.append(candidates)
 				candidateNames.update(candidates["name"].to_list())
 			except:
-			    pass
+				print("pass")
+				pass
 			i += 1
+			print(i)
+			print(len(candidateNames))
 		total = pd.concat(frames).drop_duplicates(subset=["name"])
 		colOrder = ["name", "office", "state", "candidateId", "ratings", "positions", "votes"]
 		data = total[colOrder].to_dict(orient="records")
-		with open(os.path.join(self.out_dir, "candidates-500.json"), "w") as f:
+		with open(os.path.join(self.out_dir, "candidates-10.json"), "w") as f:
+			f.write(json.dumps(data, indent=2))
+
+	def format_candidates(self):
+		df = pd.read_json("test-data/candidates-500.json")
+		df["ratings"] = df["ratings"].apply(lambda x : [{"rating_name": k, "rating_text": x[k]["rating_text"], "rating_val": x[k]["rating_val"]} for k in x.keys()])
+		df["votes"] = df["votes"].apply(lambda x: [{"vote_name": k, "vote_val": x[k]} for k in x.keys()])
+		data = df[["name", "office", "state", "candidateId", "ratings", "positions", "votes"]].to_dict(orient="records")
+		with open(os.path.join(self.out_dir, "candidates-500-format.json"), "w") as f:
 			f.write(json.dumps(data, indent=2))
