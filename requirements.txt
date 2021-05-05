@@ -1,0 +1,8 @@
+pandas
+python-decouple
+bs4
+requests
+json
+collections
+re
+votesmart
